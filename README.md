@@ -11,6 +11,7 @@
    - `AI_API_KEY` – API key for your AI provider.
    - `AI_MODEL` – model name (defaults to `gpt-4o-mini`).
    - `AI_BASE_URL` – optional custom base URL for compatible providers.
+   - `CORS_ORIGINS` – comma-separated list of allowed origins (e.g., `https://app.example.com,https://admin.example.com`).
 
 ### Frontend
 
@@ -18,6 +19,10 @@
    - `VITE_API_BASE_URL` – URL of the backend API (e.g., `http://localhost:4000`).
 
 > Note: `.env` files are ignored by Git—only commit the example templates.
+
+### Deployment environment
+
+Set the same backend environment variables (`AI_API_KEY`, `AI_MODEL`, and optional `AI_BASE_URL`) in your hosting provider's secrets UI so the chat assistant can run in production. When the frontend is served from a different domain than the API, also configure `CORS_ORIGINS` with the list of allowed frontend origins.
 
 ## Choosing an LLM provider
 
