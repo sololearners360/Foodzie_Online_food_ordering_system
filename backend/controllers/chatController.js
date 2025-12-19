@@ -9,6 +9,12 @@ const client = new OpenAI({
 
 const aiModel = process.env.AI_MODEL || "gpt-4o-mini";
 
+const rateLimitWindowMs = 60 * 1000;
+const rateLimitMaxRequests = 10;
+const rateLimitBuckets = new Map();
+const maxMessages = 15;
+const maxPayloadSizeBytes = 10 * 1024; // 10 KB
+
 // system prompts
 function getInstructions(userType) {
     if (userType === "admin") {
@@ -30,6 +36,54 @@ Rules:
 - Never invent prices/order status. If missing info, ask the user to check the relevant page.
 - Keep answers friendly and short.
 `;
+}
+
+function checkRateLimit(ip) {
+    const now = Date.now();
+    const bucket = rateLimitBuckets.get(ip);
+
+    if (!bucket || now - bucket.windowStart > rateLimitWindowMs) {
+        rateLimitBuckets.set(ip, { count: 1, windowStart: now });
+        return { allowed: true };
+    }
+
+    if (bucket.count >= rateLimitMaxRequests) {
+        const retryAfter = Math.ceil((bucket.windowStart + rateLimitWindowMs - now) / 1000);
+        return { allowed: false, retryAfter };
+    }
+
+    bucket.count += 1;
+    return { allowed: true };
+}
+
+function validateMessages(messages) {
+    if (!Array.isArray(messages)) {
+        return { valid: false, reason: "messages (array) is required" };
+    }
+
+    if (messages.length === 0) {
+        return { valid: false, reason: "messages cannot be empty" };
+    }
+
+    if (messages.length > maxMessages) {
+        return {
+            valid: false,
+            reason: `messages cannot exceed ${maxMessages} items`,
+        };
+    }
+
+    const sanitized = messages.map((msg, index) => {
+        const role = typeof msg.role === "string" ? msg.role : null;
+        const content = typeof msg.content === "string" ? msg.content.trim() : null;
+
+        if (!role || !content) {
+            throw new Error(`messages[${index}] must include role and content strings`);
+        }
+
+        return { role, content };
+    });
+
+    return { valid: true, sanitized };
 }
 
 export async function chat(req, res) {
@@ -61,6 +115,54 @@ export async function chat(req, res) {
         return res.json({ reply: response.output_text });
     } catch (e) {
         console.error("Chat error:", e);
+        return res.status(500).json({ error: "Chat failed" });
+    }
+}
+
+export async function kuddusChat(req, res) {
+    try {
+        const payloadSize = Buffer.byteLength(JSON.stringify(req.body || {}), "utf8");
+        if (payloadSize > maxPayloadSizeBytes) {
+            return res.status(413).json({ error: "Request too large" });
+        }
+
+        const rateLimit = checkRateLimit(req.ip || "global");
+        if (!rateLimit.allowed) {
+            return res
+                .status(429)
+                .json({ error: "Rate limit exceeded", retryAfter: rateLimit.retryAfter });
+        }
+
+        const { messages = [] } = req.body || {};
+        const validation = validateMessages(messages);
+        if (!validation.valid) {
+            return res.status(400).json({ error: validation.reason });
+        }
+
+        if (!aiApiKey) {
+            return res.status(500).json({ error: "AI_API_KEY is not configured" });
+        }
+
+        const systemMessage =
+            "You are Kuddus, the calm, practical support guide for the Foodzie ordering app. " +
+            "Speak warmly and concisely with step-by-step help when useful. " +
+            "If a request is abusive, illegal, or asks for sensitive data, politely refuse and say you will escalate to a human support lead.";
+
+        const trimmedMessages = validation.sanitized.slice(-maxMessages);
+        const chatMessages = [{ role: "system", content: systemMessage }, ...trimmedMessages];
+
+        const response = await client.chat.completions.create({
+            model: aiModel,
+            messages: chatMessages,
+        });
+
+        const reply = response.choices?.[0]?.message?.content?.trim?.();
+        return res.json({ reply: reply || "" });
+    } catch (e) {
+        console.error("Kuddus chat error:", e);
+        if (e?.message?.includes("must include role and content")) {
+            return res.status(400).json({ error: e.message });
+        }
         return res.status(500).json({ error: "Chat failed" });
     }
 }
