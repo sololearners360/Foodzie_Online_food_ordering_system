@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "server": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test --loader ./tests/openaiLoader.mjs"
   },
   "author": "",
   "license": "ISC",
