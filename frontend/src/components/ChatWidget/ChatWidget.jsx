@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import "./ChatWidget.css";
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+const chatApiUrl = `${apiBaseUrl}/api/chat/kuddus`;
+
 const initialMessages = [
     {
         role: "assistant",
@@ -48,7 +51,7 @@ const ChatWidget = () => {
         setError("");
 
         try {
-            const response = await fetch("/api/chat/kuddus", {
+            const response = await fetch(chatApiUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: updatedMessages }),
