@@ -8,6 +8,11 @@ const initialMessages = [
     },
 ];
 
+const containsSupportKeyword = (text = "") => {
+    const lowered = text.toLowerCase();
+    return /(complaint|return\b|returns\b)/i.test(lowered);
+};
+
 const ChatWidget = () => {
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
@@ -89,21 +94,33 @@ const ChatWidget = () => {
                     </div>
 
                     <div className="chatbox-messages" ref={messageListRef}>
-                        {messages.map((message, index) => (
-                            <div key={index} className={`msg ${message.role}`}>
-                                {message.role === "assistant" && (
-                                    <span className="kuddus-avatar small" aria-hidden="true">
-                                        🍲
-                                    </span>
-                                )}
-                                <div className="bubble">
+                        {messages.map((message, index) => {
+                            const showSupportNotice =
+                                message.role === "assistant" && containsSupportKeyword(message.content);
+
+                            return (
+                                <div key={index} className={`msg ${message.role}`}>
                                     {message.role === "assistant" && (
-                                        <p className="bubble-label">Kuddus</p>
+                                        <span className="kuddus-avatar small" aria-hidden="true">
+                                            🍲
+                                        </span>
                                     )}
-                                    <p className="bubble-text">{message.content}</p>
+                                    <div className="bubble">
+                                        {message.role === "assistant" && (
+                                            <p className="bubble-label">Kuddus</p>
+                                        )}
+                                        <p className="bubble-text">{message.content}</p>
+                                        {showSupportNotice && (
+                                            <div className="support-notice" role="note">
+                                                Need help with a complaint or return? Call{" "}
+                                                <strong>+01871 XXXXXX</strong>
+                                                {" "}or email <strong>foodzie@gmail.com</strong>.
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {loading && (
                             <div className="msg assistant">

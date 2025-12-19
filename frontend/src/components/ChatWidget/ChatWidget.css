@@ -124,6 +124,18 @@
     white-space: pre-wrap;
 }
 
+.support-notice {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff4ec;
+    border: 1px solid #ffd4c5;
+    color: #9a3412;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: inset 0 0 0 1px #ffe8df;
+}
+
 .kuddus-avatar {
     width: 40px;
     height: 40px;
