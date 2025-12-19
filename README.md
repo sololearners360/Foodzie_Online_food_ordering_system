@@ -1,9 +1,23 @@
-* Add the db connection string in backend/auth.js/db.js
-* Create a `.env` file and add the following credentials
-          MONGO_URL=
-          JWT_SECRET=
-          SALT=
-          STRIPE_SECRET_KEY=
+## Environment setup
+
+### Backend
+
+1. Copy `backend/.env.example` to `backend/.env` and fill in the values:
+   - `PORT` – server port (defaults to `4000` if not set).
+   - `MONGO_URL` – MongoDB connection string.
+   - `JWT_SECRET` – JWT signing secret.
+   - `SALT` – bcrypt salt rounds.
+   - `STRIPE_SECRET_KEY` – Stripe secret key for payments.
+   - `AI_API_KEY` – API key for your AI provider.
+   - `AI_MODEL` – model name (defaults to `gpt-4o-mini`).
+   - `AI_BASE_URL` – optional custom base URL for compatible providers.
+
+### Frontend
+
+1. Copy `frontend/.env.example` to `frontend/.env` and set:
+   - `VITE_API_BASE_URL` – URL of the backend API (e.g., `http://localhost:4000`).
+
+> Note: `.env` files are ignored by Git—only commit the example templates.
 
 ## Choosing an LLM provider
 

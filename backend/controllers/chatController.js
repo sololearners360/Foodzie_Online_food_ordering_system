@@ -1,6 +1,13 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const aiApiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
+
+const client = new OpenAI({
+    apiKey: aiApiKey,
+    baseURL: process.env.AI_BASE_URL || undefined,
+});
+
+const aiModel = process.env.AI_MODEL || "gpt-4o-mini";
 
 // system prompts
 function getInstructions(userType) {
@@ -33,6 +40,10 @@ export async function chat(req, res) {
             return res.status(400).json({ error: "message (string) is required" });
         }
 
+        if (!aiApiKey) {
+            return res.status(500).json({ error: "AI_API_KEY is not configured" });
+        }
+
         // Keep only last few turns (cheap + safe for beginners)
         const trimmedHistory = Array.isArray(history) ? history.slice(-8) : [];
 
@@ -42,7 +53,7 @@ export async function chat(req, res) {
         ].join("\n");
 
         const response = await client.responses.create({
-            model: "gpt-5.2",
+            model: aiModel,
             instructions: getInstructions(userType),
             input: convoText,
         });

@@ -4,7 +4,7 @@ import FoodItem from "../FoodItem/FoodItem";
 import "./FoodDisplay.css";
 
 const FoodDisplay = ({ category }) => {
-  const { foodList } = useContext(StoreContext);
+  const { foodList, url } = useContext(StoreContext);
 
   console.log("FoodList:", foodList);
 
@@ -25,8 +25,7 @@ const FoodDisplay = ({ category }) => {
                 name={item.name}
                 description={item.description}
                 price={item.price}
-                //image={item.image}
-                image={`http://localhost:4000/images/${item.image}`}
+                image={`${url}/images/${item.image}`}
               />
             );
           }
