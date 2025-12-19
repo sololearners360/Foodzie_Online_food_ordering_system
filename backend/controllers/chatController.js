@@ -2,10 +2,13 @@ import OpenAI from "openai";
 
 const aiApiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
 
-const client = new OpenAI({
-    apiKey: aiApiKey,
-    baseURL: process.env.AI_BASE_URL || undefined,
-});
+const createAiClient = () =>
+    new OpenAI({
+        apiKey: aiApiKey,
+        baseURL: process.env.AI_BASE_URL || undefined,
+    });
+
+let client = aiApiKey ? createAiClient() : null;
 
 const aiModel = process.env.AI_MODEL || "gpt-4o-mini";
 
@@ -94,7 +97,7 @@ export async function chat(req, res) {
             return res.status(400).json({ error: "message (string) is required" });
         }
 
-        if (!aiApiKey) {
+        if (!aiApiKey && !client) {
             return res.status(500).json({ error: "AI_API_KEY is not configured" });
         }
 
@@ -139,7 +142,7 @@ export async function kuddusChat(req, res) {
             return res.status(400).json({ error: validation.reason });
         }
 
-        if (!aiApiKey) {
+        if (!aiApiKey && !client) {
             return res.status(500).json({ error: "AI_API_KEY is not configured" });
         }
 
@@ -165,4 +168,8 @@ export async function kuddusChat(req, res) {
         }
         return res.status(500).json({ error: "Chat failed" });
     }
+}
+
+export function setAiClient(mockClient) {
+    client = mockClient;
 }

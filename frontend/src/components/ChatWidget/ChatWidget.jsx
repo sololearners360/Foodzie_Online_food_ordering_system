@@ -10,7 +10,16 @@ const initialMessages = [
 
 const containsSupportKeyword = (text = "") => {
     const lowered = text.toLowerCase();
-    return /(complaint|return\b|returns\b)/i.test(lowered);
+    return /(complaint|return\b|returns\b|refund|missing item)/i.test(lowered);
+};
+
+const buildAssistantMessage = (content, supportTriggered = false) => {
+    const reply = content?.trim?.() || "I didn't catch that.";
+    return {
+        role: "assistant",
+        content: reply,
+        supportNotice: supportTriggered || containsSupportKeyword(reply),
+    };
 };
 
 const ChatWidget = () => {
@@ -31,7 +40,7 @@ const ChatWidget = () => {
         const trimmed = input.trim();
         if (!trimmed || loading) return;
 
-        const userMessage = { role: "user", content: trimmed };
+        const userMessage = { role: "user", content: trimmed, supportNotice: containsSupportKeyword(trimmed) };
         const updatedMessages = [...messages, userMessage];
         setMessages(updatedMessages);
         setInput("");
@@ -51,15 +60,14 @@ const ChatWidget = () => {
             }
 
             const reply = data.reply?.trim?.();
-            setMessages([...updatedMessages, { role: "assistant", content: reply || "I didn't catch that." }]);
+            setMessages([...updatedMessages, buildAssistantMessage(reply, userMessage.supportNotice)]);
         } catch (err) {
             setMessages([
                 ...updatedMessages,
-                {
-                    role: "assistant",
-                    content:
-                        "Sorry, I'm having trouble responding right now. Please try again in a moment.",
-                },
+                buildAssistantMessage(
+                    "Sorry, I'm having trouble responding right now. Please try again in a moment.",
+                    userMessage.supportNotice,
+                ),
             ]);
             setError(err?.message || "Unable to reach Kuddus.");
         } finally {
@@ -77,7 +85,7 @@ const ChatWidget = () => {
     return (
         <div className="chatwidget">
             {open && (
-                <div className="chatbox" role="dialog" aria-label="Chat with Kuddus">
+                <div className="chatbox" role="dialog" aria-label="Chat with Kuddus" aria-modal="false">
                     <div className="chatbox-header">
                         <div className="chatbox-title">
                             <span className="kuddus-avatar" aria-hidden="true">
@@ -88,7 +96,7 @@ const ChatWidget = () => {
                                 <p className="chatbox-helper">Here to help with your order</p>
                             </div>
                         </div>
-                        <button className="ghost-button" onClick={() => setOpen(false)} aria-label="Close chat">
+                        <button className="ghost-button" onClick={() => setOpen(false)} aria-label="Close chat window">
                             ✕
                         </button>
                     </div>
@@ -96,7 +104,8 @@ const ChatWidget = () => {
                     <div className="chatbox-messages" ref={messageListRef}>
                         {messages.map((message, index) => {
                             const showSupportNotice =
-                                message.role === "assistant" && containsSupportKeyword(message.content);
+                                message.role === "assistant" &&
+                                (message.supportNotice || containsSupportKeyword(message.content));
 
                             return (
                                 <div key={index} className={`msg ${message.role}`}>
@@ -148,15 +157,26 @@ const ChatWidget = () => {
                             onKeyDown={onKeyDown}
                             placeholder="Ask about menu items, delivery, or payments"
                             rows={2}
+                            aria-label="Type your message"
                         />
-                        <button className="primary-button" onClick={sendMessage} disabled={loading || !input.trim()}>
+                        <button
+                            className="primary-button"
+                            onClick={sendMessage}
+                            disabled={loading || !input.trim()}
+                            aria-label="Send message"
+                        >
                             Send
                         </button>
                     </div>
                 </div>
             )}
 
-            <button className="chat-toggle" onClick={() => setOpen((prev) => !prev)} aria-expanded={open}>
+            <button
+                className="chat-toggle"
+                onClick={() => setOpen((prev) => !prev)}
+                aria-expanded={open}
+                aria-label={open ? "Hide chat with Kuddus" : "Open chat with Kuddus"}
+            >
                 {open ? "Hide" : "Chat with Kuddus"}
             </button>
         </div>

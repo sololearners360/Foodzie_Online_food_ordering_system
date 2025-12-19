@@ -5,6 +5,7 @@
     z-index: 9999;
     font-family: "Outfit", sans-serif;
     color: #1f2933;
+    max-width: 420px;
 }
 
 .chat-toggle {
@@ -18,6 +19,10 @@
     font-weight: 600;
     letter-spacing: 0.2px;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .chat-toggle:hover {
@@ -27,6 +32,7 @@
 
 .chatbox {
     width: 360px;
+    max-width: 100%;
     height: 480px;
     background: #fff;
     border: 1px solid #ffe2d8;
@@ -181,6 +187,15 @@
     box-shadow: 0 0 0 3px rgba(255, 99, 71, 0.15);
 }
 
+.chatbox button:focus-visible,
+.chat-toggle:focus-visible,
+.chatbox-input textarea:focus-visible,
+.ghost-button:focus-visible,
+.primary-button:focus-visible {
+    outline: 3px solid rgba(255, 99, 71, 0.35);
+    outline-offset: 2px;
+}
+
 .primary-button {
     background: tomato;
     color: white;
@@ -264,16 +279,18 @@
 }
 
 @media (max-width: 520px) {
-    .chatbox {
-        width: 100vw;
-        height: 70vh;
-        right: 0;
-        bottom: 0;
-    }
-
     .chatwidget {
         right: 12px;
         left: 12px;
+        bottom: 12px;
+        max-width: none;
+    }
+
+    .chatbox {
+        width: 100%;
+        height: 72vh;
+        right: 0;
+        bottom: 0;
     }
 
     .chat-toggle {
